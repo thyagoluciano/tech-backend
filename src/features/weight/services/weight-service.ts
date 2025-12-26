@@ -1,44 +1,26 @@
-import { IWeightRepository } from '../interfaces/weight-repository.interface';
-import { createWeightSchema, CreateWeightInput } from '../schemas/weight-schema';
+import { IWeightRepository } from "../interfaces/weight-repository.interface";
 
 export class WeightService {
-  constructor(private weightRepository: IWeightRepository) {}
+  constructor(private repository: IWeightRepository) {}
 
-  async registerWeight(userId: string, input: CreateWeightInput) {
-    const validatedData = createWeightSchema.parse(input);
-
-    return this.weightRepository.create({
-      userId,
-      value: validatedData.value,
-      measuredAt: validatedData.measuredAt,
-    });
+  async registerWeight(userId: string, value: number, dateStr?: string) {
+    const date = dateStr ? new Date(dateStr) : new Date();
+    return this.repository.create(userId, value, date);
   }
 
-  async getWeeklyChartData(userId: string) {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - 6);
-    startDate.setHours(0, 0, 0, 0);
+  async getWeeklyWeights(userId: string) {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    const day = now.getDay();
+    const diff = now.getDate() - day;
+    
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0);
 
-    const weights = await this.weightRepository.findByPeriod(userId, startDate, endDate);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
 
-    const chartData = [];
-    for (let i = 0; i < 7; i++) {
-      const currentDate = new Date(startDate);
-      currentDate.setDate(startDate.getDate() + i);
-      
-      const dayLabel = currentDate.toLocaleDateString('en-US', { weekday: 'short' });
-      const dayWeight = weights.find(w => 
-        w.measuredAt.toDateString() === currentDate.toDateString()
-      );
-
-      chartData.push({
-        day: dayLabel,
-        date: currentDate.toISOString().split('T')[0],
-        weight: dayWeight ? dayWeight.value : 0,
-      });
-    }
-
-    return chartData;
+    return this.repository.findByUserAndPeriod(userId, startOfWeek, endOfWeek);
   }
 }

@@ -1,12 +1,6 @@
-import { Weight } from '@prisma/client';
-
-export interface CreateWeightDTO {
-  userId: string;
-  value: number;
-  measuredAt: Date;
-}
+import { Weight } from "@prisma/client";
 
 export interface IWeightRepository {
-  create(data: CreateWeightDTO): Promise<Weight>;
-  findByPeriod(userId: string, startDate: Date, endDate: Date): Promise<Weight[]>;
+  create(userId: string, value: number, date: Date): Promise<Weight>;
+  findByUserAndPeriod(userId: string, startDate: Date, endDate: Date): Promise<Weight[]>;
 }
