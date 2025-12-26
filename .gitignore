@@ -1,0 +1,5 @@
+node_modules
+dist
+history.json
+.env
+.DS_Store
