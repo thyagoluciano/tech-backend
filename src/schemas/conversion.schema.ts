@@ -1,7 +1,7 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const ConversionSchema = z.object({
-  from: z.string().length(3, "Currency code must be 3 characters (ISO 4217)").toUpperCase(),
-  to: z.string().length(3, "Currency code must be 3 characters (ISO 4217)").toUpperCase(),
-  amount: z.number().positive("Amount must be greater than zero")
+  from: z.string().min(3).max(5).transform(v => v.toUpperCase()),
+  to: z.string().min(3).max(5).transform(v => v.toUpperCase()),
+  amount: z.number().positive("Amount must be a positive number")
 });

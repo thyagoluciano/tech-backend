@@ -1,43 +1,28 @@
-import axios from 'axios';
+import { IExchangeRateRepository } from './exchange-rate.repository.js';
 import { ApiResponse } from '../types/api.js';
-import { ICurrencyRepository, CurrencyQuote } from './ICurrencyRepository.js';
+import { CONFIG } from '../config/env.js';
 
-/**
- * Implementation of ICurrencyRepository using AwesomeAPI
- */
-export class AwesomeApiRepository implements ICurrencyRepository {
-  private readonly baseUrl = 'https://economia.awesomeapi.com.br/json/last';
-
-  /**
-   * Fetches real-time quotes. 
-   * Security Note: SSL verification is enabled by default (standard Axios behavior).
-   */
-  async getQuote(pair: string): Promise<ApiResponse<CurrencyQuote>> {
+export class AwesomeApiRepository implements IExchangeRateRepository {
+  async getRate(from: string, to: string): Promise<ApiResponse<number>> {
     try {
-      // The API expects pairs like USD-BRL
-      const response = await axios.get(`${this.baseUrl}/${pair}`);
+      const pair = `${from}-${to}`;
+      const response = await fetch(`${CONFIG.AWESOME_API_URL}/${pair}`);
       
-      // The API returns an object where the key is the pair without the hyphen (e.g., USDBRL)
-      const key = pair.replace('-', '');
-      const data = response.data[key];
-
-      if (!data) {
-        return {
-          success: false,
-          error: `Quote data for key "${key}" not found in API response.`
-        };
+      if (!response.ok) {
+        return { success: false, error: `Failed to fetch rate for ${pair}` };
       }
 
-      return {
-        success: true,
-        data: data as CurrencyQuote
-      };
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Unknown error fetching currency quote';
-      return {
-        success: false,
-        error: errorMessage
-      };
+      const data = await response.json();
+      const key = `${from}${to}`;
+      const rate = parseFloat(data[key]?.bid);
+
+      if (isNaN(rate)) {
+        return { success: false, error: 'Invalid rate data received' };
+      }
+
+      return { success: true, data: rate };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 }

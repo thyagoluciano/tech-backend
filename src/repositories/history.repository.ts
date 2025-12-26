@@ -11,9 +11,6 @@ export class HistoryRepository {
     this.filePath = join(process.cwd(), 'history.json');
   }
 
-  /**
-   * Ensures the history.json file exists, creating it with an empty array if not.
-   */
   private async ensureFile(): Promise<void> {
     try {
       await access(this.filePath);
@@ -22,9 +19,6 @@ export class HistoryRepository {
     }
   }
 
-  /**
-   * Retrieves all conversion history records.
-   */
   async getAll(): Promise<ApiResponse<HistoryEntry[]>> {
     try {
       await this.ensureFile();
@@ -39,9 +33,6 @@ export class HistoryRepository {
     }
   }
 
-  /**
-   * Saves a new conversion entry to the history file.
-   */
   async save(entry: HistoryEntry): Promise<ApiResponse<HistoryEntry>> {
     const validation = HistoryEntrySchema.safeParse(entry);
     
