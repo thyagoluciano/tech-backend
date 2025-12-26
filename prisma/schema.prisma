@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model WeightEntry {
+  id        String   @id @default(uuid())
+  userId    String
+  weight    Float
+  createdAt DateTime @default(now())
+
+  @@map("weight_entries")
+}
