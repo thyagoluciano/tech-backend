@@ -53,13 +53,13 @@ describe('AwesomeApiRepository', () => {
     expect(result.data).toBeUndefined();
   });
 
-  it('should return error ApiResponse when network error occurs', async () => {
-    (axios.get as any).mockRejectedValue(new Error('Network Error'));
+  it('should return error ApiResponse when network or SSL error occurs', async () => {
+    (axios.get as any).mockRejectedValue(new Error('Network Error or SSL Failure'));
 
     const result = await repository.getQuote('USD-BRL');
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Network Error');
+    expect(result.error).toBe('Network Error or SSL Failure');
   });
 
   it('should return error if the expected key is missing in the response body', async () => {
@@ -71,5 +71,16 @@ describe('AwesomeApiRepository', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('not found in API response');
+  });
+
+  it('should correctly transform the pair string to match API key format', async () => {
+    (axios.get as any).mockResolvedValue({
+      data: { EURBRL: { bid: '5.50' } }
+    });
+
+    const result = await repository.getQuote('EUR-BRL');
+
+    expect(result.success).toBe(true);
+    expect(result.data).toHaveProperty('bid', '5.50');
   });
 });
